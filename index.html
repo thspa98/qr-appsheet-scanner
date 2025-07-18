@@ -15,6 +15,7 @@
       justify-content: center;
       height: 100vh;
       margin: 0;
+      padding: 20px;
     }
 
     h1 {
@@ -32,6 +33,7 @@
       font-size: 1.2em;
       color: #08045b;
       margin-top: 15px;
+      text-align: center;
     }
 
     #result span {
@@ -61,22 +63,43 @@
 
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
-    const appId = "63ffafc3-1353-42b9-b058-71bec3e2a307";
-    const tableName = "Asistencia";
+    // Reemplaza esta URL por la URL de tu Apps Script desplegado
+    const APPS_SCRIPT_URL = "TU_URL_DE_APPS_SCRIPT_AQUI";
 
     function onScanSuccess(decodedText, decodedResult) {
-      // Cortamos el código: 8 primeros caracteres = ID, lo siguiente = NombreApellido
+      // Código: primeros 8 caracteres
       const codigo = decodedText.substring(0, 8);
       const nombreCompleto = decodedText.substring(8);
 
-      // Mostramos el mensaje
       document.getElementById("result").innerHTML = `✅ Bienvenido <span>${nombreCompleto}</span>`;
 
-      // Redirigir automáticamente al formulario de AppSheet
-      const appFormURL = `https://www.appsheet.com/start/${appId}#a=new&table=${tableName}&row=&slice=&defaults=%7B%22Codigo%22%3A%22${encodeURIComponent(codigo)}%22%7D`;
-      window.location.href = appFormURL;
+      // Datos a enviar
+      const data = {
+        Codigo: codigo,
+        NombreCompleto: nombreCompleto
+      };
 
-      html5QrcodeScanner.clear(); // Detener el escaneo luego de una lectura
+      // Enviar datos al Apps Script
+      fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(response => response.json())
+      .then(responseJson => {
+        if (responseJson.result === "ok") {
+          document.getElementById("result").innerHTML += "<br>✅ Registro guardado correctamente.";
+        } else {
+          document.getElementById("result").innerHTML += `<br>❌ Error: ${responseJson.message}`;
+        }
+      })
+      .catch(error => {
+        document.getElementById("result").innerHTML += `<br>❌ Error al guardar: ${error.message}`;
+      });
+
+      html5QrcodeScanner.clear(); // Detener el escaneo después de leer
     }
 
     const html5QrcodeScanner = new Html5QrcodeScanner(
