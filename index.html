@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escáner QR para AppSheet</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    #reader {
+      width: 300px;
+      margin: auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: green;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Escaneá tu código QR</h1>
+  <div id="reader"></div>
+  <div id="result"></div>
+  <button onclick="stopScan()">Detener escáner</button>
+
+  <script>
+    let scanner = new Html5Qrcode("reader");
+
+    function startScanner() {
+      scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        qrCodeMessage => {
+          document.getElementById("result").innerText = `Código: ${qrCodeMessage}`;
+          scanner.stop();
+
+          // Redirigir a formulario AppSheet con código
+          const appFormURL = "https://www.appsheet.com/start/tu_app_id#a=new&table=Asistencia&row=&slice=&defaults=%7B%22Codigo%22%3A%22" + encodeURIComponent(qrCodeMessage) + "%22%7D";
+          window.location.href = appFormURL;
+        },
+        errorMessage => {
+          // podés mostrar errores si querés
+        }
+      ).catch(err => {
+        console.error("Error iniciando escáner", err);
+      });
+    }
+
+    function stopScan() {
+      scanner.stop().then(() => {
+        document.getElementById("result").innerText = "Escáner detenido.";
+      });
+    }
+
+    startScanner();
+  </script>
+</body>
+</html>
